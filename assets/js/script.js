@@ -8,6 +8,7 @@ const prevPage = document.querySelector("#prevPage")
 const inputSearchPokemon = document.querySelector("#inputSearchPokemon")
 const divPageContent = document.querySelector("#divPageContent");
 const paginadorPokemons = document.querySelector("#paginadorPokemons");
+const ButtonHome = document.querySelector("#ButtonHome");
 
 const apiUrl = 'https://pokeapi.co/api/v2/pokemon/';
 
@@ -22,12 +23,23 @@ window.addEventListener('DOMContentLoaded', () => {
 })
 
 nextPage.addEventListener('click', () => {
-    if (OFFSET <= paginasTotal) {
+    if (OFFSET < paginasTotal) {
         OFFSET += 20;
         paginaActual += 1;
         pageCurrent.textContent = paginaActual;
         getPagePokemon();
     }
+})
+
+prevPage.addEventListener("click", () => {
+
+    if (OFFSET > 0) {
+        OFFSET -= 20;
+        paginaActual -= 1;
+        pageCurrent.textContent = paginaActual;
+        getPagePokemon();
+    }
+
 })
 
 const load = (isEnable = false) => {
@@ -55,6 +67,14 @@ const getPokemon = async (urlPokemon) => {
 
 }
 
+ButtonHome.addEventListener("click", () => {
+    divNoFound.classList.add("hidden");
+    divPageContent.classList.remove("hidden");
+    paginadorPokemons.classList.remove("hidden")
+    contPokemons.classList.remove("hidden")
+    getPagePokemon();
+})
+
 searhButtonPokemon.addEventListener('click', async () => {
 
     load(true);
@@ -62,51 +82,63 @@ searhButtonPokemon.addEventListener('click', async () => {
         divNoFound.classList.add("hidden");
         divPageContent.classList.remove("hidden");
         paginadorPokemons.classList.remove("hidden")
+        contPokemons.classList.remove("hidden")
         getPagePokemon();
         return;
     } else {
         try {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${inputSearchPokemon.value}`);
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${inputSearchPokemon.value.toLowerCase()}`);
             const data = await res.json();
 
+            if (res.status === 404) {
+                divNoFound.classList.add("hidden");
+                load(false);
+            } else if (res.status === 200) {
+                divNoFound.classList.add("hidden");
+                contPokemons.innerHTML = "";
 
-            contPokemons.innerHTML = "";
+                let div = document.createElement("div");
 
-            let div = document.createElement("div");
-
-            div.innerHTML = `<a
-                href="#"
-                class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-                >
-                <img
-                    class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg"
-                    src="${data.sprites.front_default}"
-                    alt=""
-                />
-                <div class="flex flex-col justify-between p-4 leading-normal">
-                    <h5
-                    class="mb-2 text-xl line-clamp-1 font-normal tracking-tight text-gray-900 dark:text-white"
+                div.innerHTML = `<a
+                    href="#"
+                    class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
-                    ${data.name}
-                    </h5>
-                    <p class="mb-3 line-clamp-1 text-center font-bold text-white">
-                    N°${data.id}
-                    </p>
-                </div>
-            </a>`;
+                    <img
+                        class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg"
+                        src="${data.sprites.front_default}"
+                        alt=""
+                    />
+                    <div class="flex flex-col justify-between p-4 leading-normal">
+                        <h5
+                        class="mb-2 text-xl line-clamp-1 font-normal tracking-tight text-gray-900 dark:text-white"
+                        >
+                        ${data.name}
+                        </h5>
+                        <p class="mb-3 line-clamp-1 text-center font-bold text-white">
+                        N°${data.id}
+                        </p>
+                    </div>
+                </a>`;
 
-            load(false);
+                contPokemons.appendChild(div);
+                divPageContent.classList.remove("hidden");
+                paginadorPokemons.classList.add("hidden");
+                contPokemons.classList.remove("hidden");
 
-            contPokemons.appendChild(div);
-            paginadorPokemons.classList.add("hidden");
+                load(false);
+
+                inputSearchPokemon.value = "";
+
+            }
+
 
 
         } catch (error) {
-            // alert("No hay resultados");
             divNoFound.classList.remove("hidden")
-            paginadorPokemons.classList.remove("hidden");
-            divPageContent.classList.add("hidden")
-
+            divPageContent.classList.add("hidden");
+            contPokemons.classList.add("hidden");
+            paginadorPokemons.classList.add("hidden");
+            getPagePokemon();
         }
     }
 
@@ -127,7 +159,7 @@ const getPagePokemon = async () => {
 
             let div = document.createElement('div');
             div.innerHTML = `<a
-            href="#"
+            id="nameSelect"
             class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <img
@@ -147,6 +179,11 @@ const getPagePokemon = async () => {
             </div>
           </a>`;
 
+            div.querySelector("#nameSelect").addEventListener("click", () => {
+                // Quiero abrir el modal
+                // load(true);
+            })
+
             contPokemons.appendChild(div)
         });
 
@@ -155,6 +192,7 @@ const getPagePokemon = async () => {
         pageCurrent.textContent = paginaActual;
         load(false);
 
+        inputSearchPokemon.value = "";
     } catch (error) {
         alert(error);
         load(false);
